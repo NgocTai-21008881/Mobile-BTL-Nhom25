@@ -8,27 +8,26 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from "react-native";
+import { AntDesign } from "@expo/vector-icons";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
-
-const FALLBACK_IMG =
-    "https://images.unsplash.com/photo-1524594227085-4cb851b78d7e?w=1200&auto=format&fit=crop&q=60";
 
 export default function BlogDetailScreen() {
     const route = useRoute();
     const navigation = useNavigation<any>();
-    const { title, tag, views, image, content } = (route.params || {}) as any;
+    const { title, tag, views, image, content } = route.params as any;
 
     const [relatedBlogs, setRelatedBlogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Lấy danh sách bài viết cùng loại (related)
     useEffect(() => {
         (async () => {
             const { data, error } = await supabase
                 .from("blogs")
                 .select("id, tieude, hinhanh, loai, luongxem")
-                .neq("tieude", title || "")
-                .eq("loai", tag || "Dinh dưỡng")
+                .neq("tieude", title) // loại bỏ bài đang xem
+                .eq("loai", tag) // chỉ lấy cùng chủ đề
                 .limit(5);
 
             if (error) console.error("Lỗi khi tải related blogs:", error);
@@ -39,35 +38,29 @@ export default function BlogDetailScreen() {
 
     return (
         <ScrollView style={styles.container}>
-            {/* Back button — không icon, không lỗi "?" */}
+            {/* Back */}
             <TouchableOpacity
                 onPress={() => navigation.goBack()}
                 style={styles.backButton}
             >
-                <Text style={styles.backText}>‹</Text>
+                <AntDesign name="arrowleft" size={22} color="#333" />
             </TouchableOpacity>
 
             {/* Image */}
-            <Image
-                source={{ uri: image || FALLBACK_IMG }}
-                style={styles.blogImage}
-                onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
-            />
+            <Image source={{ uri: image }} style={styles.blogImage} />
 
             {/* Info */}
             <View style={styles.infoContainer}>
-                <Text style={styles.blogTag}>{tag || "DINH DƯỠNG"}</Text>
-                <Text style={styles.blogTitle}>{title || "Bài viết"}</Text>
+                <Text style={styles.blogTag}>{tag}</Text>
+                <Text style={styles.blogTitle}>{title}</Text>
                 <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>👁 {views || 0} views</Text>
+                    <AntDesign name="eye" size={14} color="#6B7280" />
+                    <Text style={styles.metaText}> {views} views</Text>
                 </View>
             </View>
 
             {/* Content */}
-            <Text style={styles.contentText}>
-                {content ||
-                    `Bài viết chi tiết về chủ đề ${title || "Dinh dưỡng"}.`}
-            </Text>
+            <Text style={styles.contentText}>{content}</Text>
 
             {/* Related */}
             <View style={styles.relatedContainer}>
@@ -103,9 +96,7 @@ export default function BlogDetailScreen() {
                                 }
                             >
                                 <Image
-                                    source={{
-                                        uri: blog.hinhanh || FALLBACK_IMG,
-                                    }}
+                                    source={{ uri: blog.hinhanh }}
                                     style={styles.relatedImage}
                                 />
                                 <Text
@@ -114,9 +105,17 @@ export default function BlogDetailScreen() {
                                 >
                                     {blog.tieude}
                                 </Text>
-                                <Text style={styles.metaSmallText}>
-                                    👁 {blog.luongxem || 0} views
-                                </Text>
+                                <View style={styles.metaSmall}>
+                                    <AntDesign
+                                        name="eye"
+                                        size={12}
+                                        color="#6B7280"
+                                    />
+                                    <Text style={styles.metaSmallText}>
+                                        {" "}
+                                        {blog.luongxem} views
+                                    </Text>
+                                </View>
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
@@ -128,8 +127,7 @@ export default function BlogDetailScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 20 },
-    backButton: { marginTop: 40, marginBottom: 10, width: 30 },
-    backText: { fontSize: 28, color: "#333", lineHeight: 28 },
+    backButton: { marginTop: 40, marginBottom: 10 },
     blogImage: { width: "100%", height: 220, borderRadius: 16 },
     infoContainer: { marginTop: 16 },
     blogTag: {
@@ -177,10 +175,11 @@ const styles = StyleSheet.create({
         color: "#111",
         paddingHorizontal: 6,
     },
-    metaSmallText: {
-        color: "#6B7280",
-        fontSize: 12,
-        marginLeft: 6,
+    metaSmall: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 6,
         marginBottom: 8,
     },
+    metaSmallText: { color: "#6B7280", fontSize: 12, marginLeft: 4 },
 });

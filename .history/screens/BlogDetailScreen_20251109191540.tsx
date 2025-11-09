@@ -54,76 +54,7 @@ export default function BlogDetailScreen() {
                 onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
             />
 
-            {/* Info */}
-            <View style={styles.infoContainer}>
-                <Text style={styles.blogTag}>{tag || "DINH DƯỠNG"}</Text>
-                <Text style={styles.blogTitle}>{title || "Bài viết"}</Text>
-                <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>👁 {views || 0} views</Text>
-                </View>
-            </View>
-
-            {/* Content */}
-            <Text style={styles.contentText}>
-                {content ||
-                    `Bài viết chi tiết về chủ đề ${title || "Dinh dưỡng"}.`}
-            </Text>
-
-            {/* Related */}
-            <View style={styles.relatedContainer}>
-                <Text style={styles.relatedTitle}>Related Articles</Text>
-
-                {loading ? (
-                    <ActivityIndicator
-                        size="small"
-                        color="#4BC7E2"
-                        style={{ marginVertical: 20 }}
-                    />
-                ) : relatedBlogs.length === 0 ? (
-                    <Text style={{ color: "#777" }}>
-                        No related articles found.
-                    </Text>
-                ) : (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                    >
-                        {relatedBlogs.map((blog) => (
-                            <TouchableOpacity
-                                key={blog.id}
-                                style={styles.relatedCard}
-                                onPress={() =>
-                                    navigation.replace("BlogDetailScreen", {
-                                        title: blog.tieude,
-                                        tag: blog.loai,
-                                        views: blog.luongxem,
-                                        image: blog.hinhanh,
-                                        content: `Bài viết chi tiết về chủ đề ${blog.tieude}.`,
-                                    })
-                                }
-                            >
-                                <Image
-                                    source={{
-                                        uri: blog.hinhanh || FALLBACK_IMG,
-                                    }}
-                                    style={styles.relatedImage}
-                                />
-                                <Text
-                                    numberOfLines={2}
-                                    style={styles.relatedText}
-                                >
-                                    {blog.tieude}
-                                </Text>
-                                <Text style={styles.metaSmallText}>
-                                    👁 {blog.luongxem || 0} views
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                )}
-            </View>
-        </ScrollView>
-    );
+ 
 }
 
 const styles = StyleSheet.create({

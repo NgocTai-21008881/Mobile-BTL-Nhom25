@@ -1,3 +1,4 @@
+// BlogDetailScreen.tsx
 import React, { useEffect, useState } from "react";
 import {
     View,
@@ -8,38 +9,61 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from "react-native";
+import { AntDesign } from "@expo/vector-icons";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 
 const FALLBACK_IMG =
     "https://images.unsplash.com/photo-1524594227085-4cb851b78d7e?w=1200&auto=format&fit=crop&q=60";
 
+type RouteParams = {
+    title?: string;
+    tag?: string;
+    views?: number;
+    image?: string;
+    content?: string;
+};
+
 export default function BlogDetailScreen() {
     const route = useRoute();
     const navigation = useNavigation<any>();
-    const { title, tag, views, image, content } = (route.params || {}) as any;
+    const { title, tag, views, image, content } = (route.params ||
+        {}) as RouteParams;
 
+    const [heroUri, setHeroUri] = useState(image || FALLBACK_IMG);
     const [relatedBlogs, setRelatedBlogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let mounted = true;
+
         (async () => {
             const { data, error } = await supabase
                 .from("blogs")
                 .select("id, tieude, hinhanh, loai, luongxem")
-                .neq("tieude", title || "")
                 .eq("loai", tag || "Dinh dưỡng")
-                .limit(5);
+                .neq("tieude", title || "")
+                .order("luongxem", { ascending: false })
+                .limit(10);
 
-            if (error) console.error("Lỗi khi tải related blogs:", error);
-            else setRelatedBlogs(data || []);
+            if (!mounted) return;
+            if (error) {
+                console.error("Lỗi khi tải related blogs:", error);
+                setRelatedBlogs([]);
+            } else {
+                setRelatedBlogs(data || []);
+            }
             setLoading(false);
         })();
+
+        return () => {
+            mounted = false;
+        };
     }, [title, tag]);
 
     return (
         <ScrollView style={styles.container}>
-            {/* Back button — không icon, không lỗi "?" */}
+            {/* Back (tránh lỗi icon hiển thị "?") */}
             <TouchableOpacity
                 onPress={() => navigation.goBack()}
                 style={styles.backButton}
@@ -49,17 +73,18 @@ export default function BlogDetailScreen() {
 
             {/* Image */}
             <Image
-                source={{ uri: image || FALLBACK_IMG }}
+                source={{ uri: heroUri }}
                 style={styles.blogImage}
-                onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
+                onError={() => setHeroUri(FALLBACK_IMG)}
             />
 
             {/* Info */}
             <View style={styles.infoContainer}>
-                <Text style={styles.blogTag}>{tag || "DINH DƯỠNG"}</Text>
+                <Text style={styles.blogTag}>{tag || "Dinh dưỡng"}</Text>
                 <Text style={styles.blogTitle}>{title || "Bài viết"}</Text>
                 <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>👁 {views || 0} views</Text>
+                    <AntDesign name="eye" size={14} color="#6B7280" />
+                    <Text style={styles.metaText}> {views ?? 0} views</Text>
                 </View>
             </View>
 
@@ -90,14 +115,14 @@ export default function BlogDetailScreen() {
                     >
                         {relatedBlogs.map((blog) => (
                             <TouchableOpacity
-                                key={blog.id}
+                                key={String(blog.id)}
                                 style={styles.relatedCard}
                                 onPress={() =>
-                                    navigation.replace("BlogDetailScreen", {
+                                    navigation.push("BlogDetailScreen", {
                                         title: blog.tieude,
                                         tag: blog.loai,
-                                        views: blog.luongxem,
-                                        image: blog.hinhanh,
+                                        views: blog.luongxem ?? 0,
+                                        image: blog.hinhanh || FALLBACK_IMG,
                                         content: `Bài viết chi tiết về chủ đề ${blog.tieude}.`,
                                     })
                                 }
@@ -107,6 +132,7 @@ export default function BlogDetailScreen() {
                                         uri: blog.hinhanh || FALLBACK_IMG,
                                     }}
                                     style={styles.relatedImage}
+                                    onError={() => {}}
                                 />
                                 <Text
                                     numberOfLines={2}
@@ -114,9 +140,17 @@ export default function BlogDetailScreen() {
                                 >
                                     {blog.tieude}
                                 </Text>
-                                <Text style={styles.metaSmallText}>
-                                    👁 {blog.luongxem || 0} views
-                                </Text>
+                                <View style={styles.metaSmall}>
+                                    <AntDesign
+                                        name="eye"
+                                        size={12}
+                                        color="#6B7280"
+                                    />
+                                    <Text style={styles.metaSmallText}>
+                                        {" "}
+                                        {blog.luongxem ?? 0} views
+                                    </Text>
+                                </View>
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
@@ -129,8 +163,13 @@ export default function BlogDetailScreen() {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 20 },
     backButton: { marginTop: 40, marginBottom: 10, width: 30 },
-    backText: { fontSize: 28, color: "#333", lineHeight: 28 },
-    blogImage: { width: "100%", height: 220, borderRadius: 16 },
+    backText: { fontSize: 26, color: "#333", lineHeight: 26 },
+    blogImage: {
+        width: "100%",
+        height: 220,
+        borderRadius: 16,
+        backgroundColor: "#f3f4f6",
+    },
     infoContainer: { marginTop: 16 },
     blogTag: {
         color: "#4BC7E2",
@@ -169,6 +208,7 @@ const styles = StyleSheet.create({
         height: 110,
         borderTopLeftRadius: 12,
         borderTopRightRadius: 12,
+        backgroundColor: "#f3f4f6",
     },
     relatedText: {
         fontSize: 14,
@@ -177,10 +217,12 @@ const styles = StyleSheet.create({
         color: "#111",
         paddingHorizontal: 6,
     },
-    metaSmallText: {
-        color: "#6B7280",
-        fontSize: 12,
-        marginLeft: 6,
+    metaSmall: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 6,
         marginBottom: 8,
+        marginTop: 4,
     },
+    metaSmallText: { color: "#6B7280", fontSize: 12, marginLeft: 4 },
 });
