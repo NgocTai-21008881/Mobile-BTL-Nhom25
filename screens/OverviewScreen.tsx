@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -9,10 +9,22 @@ import {
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { getBlogs } from '../services/blogService';
+
+
 
 export default function HomeScreen() {
     const navigation = useNavigation<any>();
     const route = useRoute();
+
+    // lay blog
+    const [blogs, setBlogs] = useState([]);
+    useEffect(() => {
+        (async () => {
+            const data = await getBlogs();
+            setBlogs(data);
+        })();
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -156,76 +168,42 @@ export default function HomeScreen() {
                 {/* Blogs */}
                 <View style={styles.rowBetween}>
                     <Text style={styles.sectionTitle}>Blogs</Text>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('AllBlogsScreen')}>
                         <Text style={styles.linkText}>View more ›</Text>
                     </TouchableOpacity>
+
                 </View>
                 {/* Horizontal Scroll View for Blogs */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blogsContainer}>
-                    <View style={styles.blogCard}>
-                        <Image
-                            source={{ uri: 'https://cdn.pixabay.com/photo/2025/07/27/10/26/blackbirds-9738306_1280.jpg' }}
-                            style={styles.blogImage}
-                        />
-                        <View style={{ padding: 12 }}>
-                            <Text style={styles.blogTag}>Nutrition</Text>
-                            <Text style={styles.blogTitle} numberOfLines={2}>
-                                More about Apples: Benefits, nutrition, and tips
-                            </Text>
-                            <View style={styles.blogMetaRow}>
-                                <AntDesign name="eye" size={14} color="#6B7280" />
-                                <Text style={styles.blogMeta}> 2.8k views</Text>
-                                <Text style={styles.dot}>•</Text>
-                                <TouchableOpacity>
-                                    <Text style={styles.linkText}>Tell me more</Text>
-                                </TouchableOpacity>
+                    {blogs.map((item: any) => (
+                        <View key={item.id} style={styles.blogCard}>
+                            <Image source={{ uri: item.hinhanh }} style={styles.blogImage} />
+                            <View style={{ padding: 12 }}>
+                                <Text style={styles.blogTag}>{item.loai}</Text>
+                                <Text style={styles.blogTitle} numberOfLines={2}>
+                                    {item.tieude}
+                                </Text>
+                                <View style={styles.blogMetaRow}>
+                                    <AntDesign name="eye" size={14} color="#6B7280" />
+                                    <Text style={styles.blogMeta}> {item.luongxem} views</Text>
+                                    <Text style={styles.dot}>•</Text>
+                                    <TouchableOpacity
+                                        onPress={() =>
+                                            navigation.navigate('BlogDetailScreen', {
+                                                title: item.tieude,
+                                                tag: item.loai,
+                                                views: item.luongxem,
+                                                image: item.hinhanh,
+                                                content: `Bài viết chi tiết về chủ đề ${item.tieude}.`,
+                                            })
+                                        }
+                                    >
+                                        <Text style={styles.linkText}>View Detail</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
-                    </View>
-
-                    {/* Add more blog cards here */}
-                    <View style={styles.blogCard}>
-                        <Image
-                            source={{ uri: 'https://cdn.pixabay.com/photo/2025/07/27/10/26/blackbirds-9738306_1280.jpg' }}
-                            style={styles.blogImage}
-                        />
-                        <View style={{ padding: 12 }}>
-                            <Text style={styles.blogTag}>Health</Text>
-                            <Text style={styles.blogTitle} numberOfLines={2}>
-                                The Benefits of Daily Exercise
-                            </Text>
-                            <View style={styles.blogMetaRow}>
-                                <AntDesign name="eye" size={14} color="#6B7280" />
-                                <Text style={styles.blogMeta}> 1.2k views</Text>
-                                <Text style={styles.dot}>•</Text>
-                                <TouchableOpacity>
-                                    <Text style={styles.linkText}>Tell me more</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* You can continue adding more blog cards */}
-                    <View style={styles.blogCard}>
-                        <Image
-                            source={{ uri: 'https://cdn.pixabay.com/photo/2025/07/27/10/26/blackbirds-9738306_1280.jpg' }}
-                            style={styles.blogImage}
-                        />
-                        <View style={{ padding: 12 }}>
-                            <Text style={styles.blogTag}>Health</Text>
-                            <Text style={styles.blogTitle} numberOfLines={2}>
-                                The Benefits of Daily Exercise
-                            </Text>
-                            <View style={styles.blogMetaRow}>
-                                <AntDesign name="eye" size={14} color="#6B7280" />
-                                <Text style={styles.blogMeta}> 1.2k views</Text>
-                                <Text style={styles.dot}>•</Text>
-                                <TouchableOpacity>
-                                    <Text style={styles.linkText}>Tell me more</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
+                    ))}
                 </ScrollView>
 
 

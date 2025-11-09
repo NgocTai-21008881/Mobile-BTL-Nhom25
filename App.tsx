@@ -16,6 +16,8 @@ import SleepScreen from './screens/SleepScreen';
 import HeartScreen from './screens/HeartScreen';
 import CaloriesScreen from './screens/CaloriesScreen';
 import BMIScreen from './screens/BMIScreen';
+import BlogDetailScreen from './screens/BlogDetailScreen';
+import AllBlogsScreen from './screens/AllBlogsScreen';
 
 export type RootStackParamList = {
   Launch: undefined;
@@ -30,6 +32,14 @@ export type RootStackParamList = {
   HeartScreen: undefined;
   CaloriesScreen: undefined;
   BMIScreen: undefined;
+  BlogDetailScreen: {
+    title: string;
+    tag: string;
+    views: number;
+    image: string;
+    content: string;
+  };
+  AllBlogsScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -78,6 +88,9 @@ export default function App() {
             headerLeft: () => null,
           }}
         />
+
+        <Stack.Screen name="BlogDetailScreen" component={BlogDetailScreen} />
+
         <Stack.Screen
           name="AllHealthy"
           component={AllHealthyScreen}
@@ -101,6 +114,15 @@ export default function App() {
         <Stack.Screen name="HeartScreen" component={HeartScreen} options={{ title: 'Heart Rate' }} />
         <Stack.Screen name="CaloriesScreen" component={CaloriesScreen} options={{ title: 'Calories Burned' }} />
         <Stack.Screen name="BMIScreen" component={BMIScreen} options={{ title: 'BMI' }} />
+
+        <Stack.Screen
+          name="AllBlogsScreen"
+          component={AllBlogsScreen}
+          options={{
+            title: 'All Blogs',
+            headerShadowVisible: false,
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

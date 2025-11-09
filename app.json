@@ -13,9 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "extra": {
-      "EXPO_PUBLIC_SUPABASE_URL": "https://hlrizfuaxgqglqicyvwh.supabase.co",
-      "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhscml6ZnVheGdxZ2xxaWN5dndoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MzMzMDksImV4cCI6MjA3NjMwOTMwOX0.7JzPxWRu0ceHEuYowySlMZwBtQYPtduXhdCdUPtIcqk"
-    },
+      "EXPO_PUBLIC_SUPABASE_URL": "https://jqdocdaejfrwhkvttxfs.supabase.co",
+      "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxZG9jZGFlamZyd2hrdnR0eGZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NzcyMDksImV4cCI6MjA3ODI1MzIwOX0.oaZcw5ZbnoYEC3GW0lImRbZkzXCkITnZPug06FyP8Fs"    },
 
 
     "ios": {
