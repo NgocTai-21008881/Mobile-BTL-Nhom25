@@ -49,6 +49,8 @@ export default function SignInScreen({ navigation }: any) {
                 <TextInput
                     value={email}
                     onChangeText={setEmail}
+                    placeholder="tai@gmail.com"
+                    placeholderTextColor="#A7A7A7"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     style={styles.input}
@@ -62,6 +64,7 @@ export default function SignInScreen({ navigation }: any) {
                 <TextInput
                     value={pwd}
                     onChangeText={setPwd}
+                    placeholderTextColor="#A7A7A7"
                     autoCapitalize="none"
                     secureTextEntry={secure}
                     style={styles.input}
