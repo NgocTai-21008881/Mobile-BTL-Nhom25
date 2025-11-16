@@ -6,6 +6,7 @@ import {
     ScrollView,
     TouchableOpacity,
     Image,
+    Alert,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import {
@@ -17,6 +18,7 @@ import { getBlogs } from "../services/blogService";
 import { supabase } from "../lib/supabase";
 import { getTodayActivity, getWeeklyStats } from "../services/activityService";
 import { getDaysBeforePeriod } from "../services/cycleService";
+import { insertTestData } from "../services/testDataService";
 
 export default function HomeScreen() {
     const navigation = useNavigation<any>();
@@ -73,6 +75,24 @@ export default function HomeScreen() {
         }
     };
 
+    // Handle add test data
+    const handleAddTestData = async () => {
+        if (!userId) {
+            Alert.alert("❌ Lỗi", "Chưa xác định user");
+            return;
+        }
+
+        const { error } = await insertTestData(userId);
+        if (error) {
+            Alert.alert("❌ Lỗi", error);
+        } else {
+            Alert.alert("✅ Thành công", "Đã thêm dữ liệu test. Đang refresh...");
+            // Reload data
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            loadUserData();
+        }
+    };
+
     useEffect(() => {
         loadUserData();
 
@@ -116,13 +136,22 @@ export default function HomeScreen() {
                 {/* Title + All data */}
                 <View style={styles.rowBetween}>
                     <Text style={styles.pageTitle}>Overview</Text>
-                    <TouchableOpacity
-                        style={styles.allDataBtn}
-                        onPress={() => navigation.navigate("AllHealthy")}
-                    >
-                        <AntDesign name="bar-chart" size={14} color="#5865F2" />
-                        <Text style={styles.allDataText}>All data</Text>
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                        <TouchableOpacity
+                            style={styles.allDataBtn}
+                            onPress={handleAddTestData}
+                        >
+                            <AntDesign name="plus" size={14} color="#5865F2" />
+                            <Text style={styles.allDataText}>Test Data</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.allDataBtn}
+                            onPress={() => navigation.navigate("AllHealthy")}
+                        >
+                            <AntDesign name="bar-chart" size={14} color="#5865F2" />
+                            <Text style={styles.allDataText}>All data</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* Health Score */}
