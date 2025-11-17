@@ -1,0 +1,521 @@
+import React, { useEffect, useMemo, useState } from "react";
+import {
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    ActivityIndicator,
+    TouchableOpacity,
+    Modal,
+    TextInput,
+    Alert,
+    FlatList,
+} from "react-native";
+import { AntDesign } from "@expo/vector-icons";
+import { fetchDailyActivity } from "../services/activityService";
+import { supabase } from "../lib/supabase";
+
+interface FoodItem {
+    id: string;
+    name: string;
+    calories: number;
+    unit: string;
+    emoji: string;
+}
+
+const commonFoods: FoodItem[] = [
+    { id: "1", name: "Cơm trắng", calories: 250, unit: "1 bát", emoji: "🍚" },
+    { id: "2", name: "Bánh mì", calories: 265, unit: "1 lát", emoji: "🥖" },
+    { id: "3", name: "Gà nướng", calories: 300, unit: "100g", emoji: "🍗" },
+    { id: "4", name: "Trứng chiên", calories: 155, unit: "1 quả", emoji: "🍳" },
+    { id: "5", name: "Sữa tươi", calories: 150, unit: "1 cốc", emoji: "🥛" },
+    { id: "6", name: "Chuối", calories: 105, unit: "1 quả", emoji: "🍌" },
+    { id: "7", name: "Táo", calories: 95, unit: "1 quả", emoji: "🍎" },
+    { id: "8", name: "Hamburger", calories: 450, unit: "1 chiếc", emoji: "🍔" },
+    { id: "9", name: "Pizza", calories: 285, unit: "1 miếng", emoji: "🍕" },
+    { id: "10", name: "Ramen", calories: 380, unit: "1 bát", emoji: "🍜" },
+    { id: "11", name: "Cà phê", calories: 2, unit: "1 tách", emoji: "☕" },
+    {
+        id: "12",
+        name: "Nước ngọt",
+        calories: 140,
+        unit: "1 chai 330ml",
+        emoji: "🥤",
+    },
+];
+
+export default function CaloriesScreen() {
+    const [caloriesData, setCaloriesData] = useState<number[]>([]);
+    const [labels, setLabels] = useState<string[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedDay, setSelectedDay] = useState<number | null>(null);
+    const [customCalories, setCustomCalories] = useState("");
+    const [foodInput, setFoodInput] = useState("");
+    const [selectedFoods, setSelectedFoods] = useState<FoodItem[]>([]);
+
+    useEffect(() => {
+        (async () => {
+            const { data } = await supabase.auth.getUser();
+            if (data?.user?.id) setUserId(data.user.id);
+        })();
+    }, []);
+
+    useEffect(() => {
+        if (!userId) return;
+        loadCaloriesData();
+    }, [userId]);
+
+    const loadCaloriesData = async () => {
+        try {
+            setLoading(true);
+            const data = await fetchDailyActivity(userId!, "week");
+            if (data.length > 0) {
+                setCaloriesData(
+                    data.map(
+                        (d: any) => d.calories || 1800 + Math.random() * 600
+                    )
+                );
+                setLabels(
+                    data.map((d: any) =>
+                        new Date(d.date).toLocaleDateString("vi-VN", {
+                            weekday: "short",
+                        })
+                    )
+                );
+            } else {
+                // Dữ liệu mẫu
+                setCaloriesData([2100, 1950, 2300, 2050, 2200, 1900, 2100]);
+                setLabels(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+            }
+        } catch (e) {
+            console.error("Lỗi tải calories:", e);
+            setCaloriesData([2100, 1950, 2300, 2050, 2200, 1900, 2100]);
+            setLabels(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const totalCalories = useMemo(
+        () => caloriesData.reduce((a, b) => a + b, 0),
+        [caloriesData]
+    );
+
+    const avgCalories = useMemo(
+        () =>
+            caloriesData.length > 0
+                ? Math.round(totalCalories / caloriesData.length)
+                : 0,
+        [totalCalories, caloriesData]
+    );
+
+    const maxCalories = useMemo(
+        () => (caloriesData.length > 0 ? Math.max(...caloriesData) : 2500),
+        [caloriesData]
+    );
+
+    const addFoodCalories = (food: FoodItem) => {
+        setSelectedFoods([...selectedFoods, food]);
+    };
+
+    const removeFoodCalories = (index: number) => {
+        setSelectedFoods(selectedFoods.filter((_, i) => i !== index));
+    };
+
+    const totalSelectedCalories = useMemo(
+        () => selectedFoods.reduce((sum, food) => sum + food.calories, 0),
+        [selectedFoods]
+    );
+
+    const saveCustomCalories = () => {
+        if (!customCalories.trim() && selectedFoods.length === 0) {
+            Alert.alert("Lỗi", "Vui lòng nhập calo hoặc chọn thực phẩm");
+            return;
+        }
+
+        const totalCals =
+            (customCalories ? parseFloat(customCalories) : 0) +
+            totalSelectedCalories;
+        Alert.alert("Thành công", `Bạn đã nhập ${totalCals} kcal`, [
+            {
+                text: "OK",
+                onPress: () => {
+                    setModalVisible(false);
+                    setCustomCalories("");
+                    setSelectedFoods([]);
+                },
+            },
+        ]);
+    };
+
+    if (loading) {
+        return (
+            <View
+                style={[
+                    styles.container,
+                    { justifyContent: "center", alignItems: "center" },
+                ]}
+            >
+                <ActivityIndicator size="large" color="#5865F2" />
+            </View>
+        );
+    }
+
+    const filteredFoods = commonFoods.filter((food) =>
+        food.name.toLowerCase().includes(foodInput.toLowerCase())
+    );
+
+    return (
+        <ScrollView
+            style={styles.container}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 30 }}
+        >
+            {/* Header */}
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Calories</Text>
+                <Text style={styles.headerSubtitle}>
+                    Theo dõi calo tiêu hao mỗi ngày
+                </Text>
+            </View>
+
+            {/* Stats Cards */}
+            <View style={styles.statsGrid}>
+                <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>Tổng tuần</Text>
+                    <Text style={[styles.statValue, { color: "#5865F2" }]}>
+                        {totalCalories}
+                    </Text>
+                    <Text style={styles.statUnit}>kcal</Text>
+                </View>
+                <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>Trung bình</Text>
+                    <Text style={[styles.statValue, { color: "#5865F2" }]}>
+                        {avgCalories}
+                    </Text>
+                    <Text style={styles.statUnit}>kcal/ngày</Text>
+                </View>
+            </View>
+
+            {/* Chart */}
+            <View style={styles.chartCard}>
+                <Text style={styles.chartTitle}>Biểu đồ calo trong tuần</Text>
+                <View style={styles.chartArea}>
+                    {caloriesData.map((v, i) => {
+                        const barHeight = (v / maxCalories) * 120;
+                        const isSelected = selectedDay === i;
+                        return (
+                            <TouchableOpacity
+                                key={i}
+                                style={styles.barWrap}
+                                onPress={() =>
+                                    setSelectedDay(isSelected ? null : i)
+                                }
+                            >
+                                <View
+                                    style={[
+                                        styles.bar,
+                                        {
+                                            height: barHeight,
+                                            backgroundColor: isSelected
+                                                ? "#5865F2"
+                                                : "#A0C4FF",
+                                        },
+                                    ]}
+                                />
+                                <Text
+                                    style={[
+                                        styles.barLabel,
+                                        isSelected && styles.barLabelSelected,
+                                    ]}
+                                >
+                                    {labels[i]}
+                                </Text>
+                                {isSelected && (
+                                    <Text style={styles.barValue}>
+                                        {v} kcal
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            </View>
+
+            {/* CTA Button */}
+            <TouchableOpacity
+                style={styles.ctaButton}
+                onPress={() => setModalVisible(true)}
+            >
+                <AntDesign name="plus" size={20} color="#fff" />
+                <Text style={styles.ctaText}>Tính calo môn ăn</Text>
+            </TouchableOpacity>
+
+            {/* Tips */}
+            <View style={styles.tipsCard}>
+                <Text style={styles.tipsTitle}>
+                    💡 Lời khuyên cân bằng calo
+                </Text>
+                <View style={styles.tipItem}>
+                    <Text style={styles.tipNumber}>1</Text>
+                    <Text style={styles.tipText}>
+                        Ăn 5 bữa nhỏ/ngày thay vì 3 bữa lớn
+                    </Text>
+                </View>
+                <View style={styles.tipItem}>
+                    <Text style={styles.tipNumber}>2</Text>
+                    <Text style={styles.tipText}>
+                        Tập luyện 30 phút mỗi ngày
+                    </Text>
+                </View>
+                <View style={styles.tipItem}>
+                    <Text style={styles.tipNumber}>3</Text>
+                    <Text style={styles.tipText}>
+                        Chọn thực phẩm lành mạnh, tự nhiên
+                    </Text>
+                </View>
+                <View style={styles.tipItem}>
+                    <Text style={styles.tipNumber}>4</Text>
+                    <Text style={styles.tipText}>
+                        Uống nước đủ, hạn chế đồ uống có đường
+                    </Text>
+                </View>
+            </View>
+
+            {/* Mục tiêu calo */}
+            <View style={styles.goalCard}>
+                <Text style={styles.goalTitle}>🎯 Mục tiêu calo hàng ngày</Text>
+                <View style={styles.goalProgressBox}>
+                    <View style={styles.goalBar}>
+                        <View
+                            style={[
+                                styles.goalProgress,
+                                {
+                                    width:
+                                        Math.min(
+                                            100,
+                                            (avgCalories / 2000) * 100
+                                        ) + "%",
+                                },
+                            ]}
+                        />
+                    </View>
+                    <Text style={styles.goalText}>
+                        {avgCalories} / 2000 kcal
+                    </Text>
+                </View>
+                <Text style={styles.goalDesc}>
+                    Mục tiêu hàng ngày là 2000 kcal - Điều chỉnh theo cơ thể của
+                    bạn
+                </Text>
+            </View>
+
+            {/* Modal Tính Calo */}
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalBg}>
+                    <TouchableOpacity
+                        style={styles.modalBackdrop}
+                        activeOpacity={1}
+                        onPress={() => setModalVisible(false)}
+                    />
+                    <View style={styles.modal}>
+                        <View style={styles.modalHead}>
+                            <TouchableOpacity
+                                onPress={() => setModalVisible(false)}
+                            >
+                                <AntDesign
+                                    name="close"
+                                    size={28}
+                                    color="#5865F2"
+                                />
+                            </TouchableOpacity>
+                            <Text style={styles.modalTitle}>Tính Calo</Text>
+                            <View style={{ width: 28 }} />
+                        </View>
+
+                        <ScrollView style={styles.modalContent}>
+                            {/* Manual Input */}
+                            <View style={styles.section}>
+                                <Text style={styles.sectionTitle}>
+                                    Nhập calo trực tiếp
+                                </Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="VD: 500 kcal"
+                                    value={customCalories}
+                                    onChangeText={setCustomCalories}
+                                    keyboardType="decimal-pad"
+                                />
+                            </View>
+
+                            {/* Food Search */}
+                            <View style={styles.section}>
+                                <Text style={styles.sectionTitle}>
+                                    Chọn từ danh sách
+                                </Text>
+                                <TextInput
+                                    style={styles.searchInput}
+                                    placeholder="Tìm kiếm thực phẩm..."
+                                    value={foodInput}
+                                    onChangeText={setFoodInput}
+                                    placeholderTextColor="#9CA3AF"
+                                />
+                            </View>
+
+                            {/* Food List */}
+                            <FlatList
+                                scrollEnabled={false}
+                                data={filteredFoods}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.foodCard}
+                                        onPress={() => addFoodCalories(item)}
+                                    >
+                                        <View style={styles.foodInfo}>
+                                            <Text style={styles.foodEmoji}>
+                                                {item.emoji}
+                                            </Text>
+                                            <View style={styles.foodDetails}>
+                                                <Text style={styles.foodName}>
+                                                    {item.name}
+                                                </Text>
+                                                <Text style={styles.foodUnit}>
+                                                    {item.unit}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        <Text style={styles.foodCalories}>
+                                            {item.calories} kcal
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                            />
+
+                            {/* Selected Foods */}
+                            {selectedFoods.length > 0 && (
+                                <View style={styles.selectedFoodsSection}>
+                                    <Text style={styles.sectionTitle}>
+                                        Thực phẩm đã chọn
+                                    </Text>
+                                    {selectedFoods.map((food, index) => (
+                                        <View
+                                            key={index}
+                                            style={styles.selectedFoodItem}
+                                        >
+                                            <Text
+                                                style={styles.selectedFoodText}
+                                            >
+                                                {food.emoji} {food.name}
+                                            </Text>
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    removeFoodCalories(index)
+                                                }
+                                            >
+                                                <AntDesign
+                                                    name="close"
+                                                    size={16}
+                                                    color="#EF4444"
+                                                />
+                                            </TouchableOpacity>
+                                        </View>
+                                    ))}
+                                    <View style={styles.totalCaloriesBox}>
+                                        <Text style={styles.totalText}>
+                                            Tổng calo:
+                                        </Text>
+                                        <Text style={styles.totalValue}>
+                                            {totalSelectedCalories +
+                                                (customCalories
+                                                    ? parseFloat(customCalories)
+                                                    : 0)}{" "}
+                                            kcal
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+                        </ScrollView>
+
+                        <TouchableOpacity
+                            style={styles.saveBtn}
+                            onPress={saveCustomCalories}
+                        >
+                            <Text style={styles.saveBtnText}>
+                                Lưu {totalSelectedCalories > 0 ? "Calo" : ""}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </ScrollView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: "#F9FAFB", padding: 20 },
+    headerTitle: {
+        fontSize: 22,
+        fontWeight: "800",
+        color: "#0F172A",
+        marginBottom: 4,
+    },
+    headerSubtitle: { fontSize: 14, color: "#64748B", marginBottom: 20 },
+    statsGrid: {
+        flexDirection: "row",
+        gap: 12,
+        marginBottom: 20,
+    },
+    statBox: {
+        flex: 1,
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        padding: 20,
+        alignItems: "center",
+        borderWidth: 2,
+        borderColor: "#F59E0B",
+    },
+    statLabel: { fontSize: 13, color: "#6B7280", fontWeight: "700" },
+    statValue: {
+        fontSize: 28,
+        fontWeight: "800",
+        color: "#0F172A",
+        marginVertical: 8,
+    },
+    statUnit: { fontSize: 12, color: "#64748B" },
+    chartCard: {
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 20,
+    },
+    chartArea: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        alignItems: "flex-end",
+        height: 140,
+    },
+    barWrap: { alignItems: "center" },
+    bar: { width: 18, backgroundColor: "#F59E0B", borderRadius: 4 },
+    barLabel: { fontSize: 11, color: "#64748B", marginTop: 8 },
+    tipsCard: { backgroundColor: "#FFFBEB", borderRadius: 16, padding: 16 },
+    tipsTitle: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: "#0F172A",
+        marginBottom: 12,
+    },
+    tipsText: {
+        fontSize: 13,
+        color: "#374151",
+        lineHeight: 20,
+        marginBottom: 8,
+    },
+});

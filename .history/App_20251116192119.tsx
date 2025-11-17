@@ -1,0 +1,247 @@
+import React, { useEffect, useState } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { supabase } from "./lib/supabase";
+
+// Import tất cả screens
+import LaunchScreen from "./screens/LaunchScreen";
+import LoadingScreen from "./screens/LoadingScreen";
+import SignInScreen from "./screens/SignInScreen";
+import HomeScreen from "./screens/HomeScreen";
+import DoubleSupportScreen from "./screens/DoubleSupportScreen";
+import CycleTrackingScreen from "./screens/CycleTrackingScreen";
+import SleepScreen from "./screens/SleepScreen";
+import HeartScreen from "./screens/HeartScreen";
+import CaloriesScreen from "./screens/CaloriesScreen";
+import BMIScreen from "./screens/BMIScreen";
+import AllHealthyScreen from "./screens/AllHealthyScreen";
+import AllHealthyStepScreen from "./screens/AllHealthyStepScreen";
+import AllBlogsScreen from "./screens/AllBlogsScreen";
+import BlogDetailScreen from "./screens/BlogDetailScreen";
+import ExploreScreen from "./screens/ExploreScreen";
+import OverviewScreen from "./screens/OverviewScreen";
+
+export type RootStackParamList = {
+    Launch: undefined;
+    Loading: undefined;
+    SignIn: undefined;
+    Home: undefined;
+    DoubleSupportScreen: undefined;
+    CycleTrackingScreen: undefined;
+    SleepScreen: undefined;
+    HeartScreen: undefined;
+    CaloriesScreen: undefined;
+    BMIScreen: undefined;
+    AllHealthy: undefined;
+    AllHealthyStep: undefined;
+    AllBlogsScreen: undefined;
+    BlogDetailScreen: { id: string };
+    ExploreScreen: undefined;
+    OverviewScreen: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export default function App() {
+    const [state, setState] = useState<
+        "launch" | "loading" | "signin" | "home"
+    >("launch");
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+    // Kiểm tra trạng thái đăng nhập
+    useEffect(() => {
+        const checkUser = async () => {
+            try {
+                console.log("🔍 Kiểm tra trạng thái đăng nhập...");
+
+                const {
+                    data: { user },
+                    error,
+                } = await supabase.auth.getUser();
+
+                if (error) {
+                    console.error("❌ Lỗi:", error.message);
+                    setIsLoggedIn(false);
+                    return;
+                }
+
+                if (user) {
+                    console.log("✅ Người dùng đã đăng nhập:", user.email);
+                    setIsLoggedIn(true);
+                } else {
+                    console.log("⚠️ Chưa có người dùng đăng nhập");
+                    setIsLoggedIn(false);
+                }
+            } catch (err) {
+                console.error("💥 Lỗi không mong muốn:", err);
+                setIsLoggedIn(false);
+            }
+        };
+
+        checkUser();
+
+        // Lắng nghe thay đổi trạng thái đăng nhập
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+                console.log("🔔 Trạng thái đăng nhập thay đổi:", event);
+                setIsLoggedIn(!!session?.user);
+            }
+        );
+
+        return () => {
+            authListener?.subscription.unsubscribe();
+        };
+    }, []);
+
+    // Xử lý trạng thái điều hướng
+    useEffect(() => {
+        if (state === "loading") {
+            if (isLoggedIn === null) {
+                // Đang kiểm tra trạng thái đăng nhập
+                return;
+            } else if (isLoggedIn) {
+                setState("home");
+            } else {
+                setState("signin");
+            }
+        }
+    }, [state, isLoggedIn]);
+
+    return (
+        <NavigationContainer>
+            <Stack.Navigator
+                screenOptions={{
+                    headerStyle: {
+                        backgroundColor: "#F6F7FB",
+                    },
+                    headerTintColor: "#10B981",
+                    headerTitleStyle: {
+                        fontWeight: "700",
+                    },
+                }}
+            >
+                {/* 1️⃣ Launch Screen */}
+                {state === "launch" && (
+                    <Stack.Screen
+                        name="Launch"
+                        options={{
+                            headerShown: false,
+                            animationEnabled: false,
+                        }}
+                    >
+                        {() => <LaunchScreen setState={setState} />}
+                    </Stack.Screen>
+                )}
+
+                {/* 2️⃣ Loading Screen */}
+                {state === "loading" && (
+                    <Stack.Screen
+                        name="Loading"
+                        component={LoadingScreen}
+                        options={{
+                            headerShown: false,
+                            animationEnabled: false,
+                        }}
+                    />
+                )}
+
+                {/* 3️⃣ Sign In Screen */}
+                {state === "signin" && (
+                    <Stack.Screen
+                        name="SignIn"
+                        component={SignInScreen}
+                        options={{
+                            headerShown: false,
+                            animationEnabled: false,
+                        }}
+                    />
+                )}
+
+                {/* 4️⃣ Home & Other Screens */}
+                {state === "home" && (
+                    <>
+                        <Stack.Screen
+                            name="Home"
+                            component={HomeScreen}
+                            options={{
+                                headerShown: false,
+                            }}
+                        />
+
+                        <Stack.Screen
+                            name="OverviewScreen"
+                            component={OverviewScreen}
+                            options={{ title: "Tổng Quan" }}
+                        />
+
+                        <Stack.Screen
+                            name="ExploreScreen"
+                            component={ExploreScreen}
+                            options={{ title: "Khám Phá" }}
+                        />
+
+                        <Stack.Screen
+                            name="DoubleSupportScreen"
+                            component={DoubleSupportScreen}
+                            options={{ title: "Bước Đi" }}
+                        />
+
+                        <Stack.Screen
+                            name="CycleTrackingScreen"
+                            component={CycleTrackingScreen}
+                            options={{ title: "Chu Kỳ" }}
+                        />
+
+                        <Stack.Screen
+                            name="SleepScreen"
+                            component={SleepScreen}
+                            options={{ title: "Giấc Ngủ" }}
+                        />
+
+                        <Stack.Screen
+                            name="HeartScreen"
+                            component={HeartScreen}
+                            options={{ title: "Nhịp Tim" }}
+                        />
+
+                        <Stack.Screen
+                            name="CaloriesScreen"
+                            component={CaloriesScreen}
+                            options={{ title: "Calories" }}
+                        />
+
+                        <Stack.Screen
+                            name="BMIScreen"
+                            component={BMIScreen}
+                            options={{ title: "BMI" }}
+                        />
+
+                        <Stack.Screen
+                            name="AllHealthy"
+                            component={AllHealthyScreen}
+                            options={{ title: "Tất Cả Dữ Liệu" }}
+                        />
+
+                        <Stack.Screen
+                            name="AllHealthyStep"
+                            component={AllHealthyStepScreen}
+                            options={{ title: "Chi Tiết Bước" }}
+                        />
+
+                        <Stack.Screen
+                            name="AllBlogsScreen"
+                            component={AllBlogsScreen}
+                            options={{ title: "Bài Viết" }}
+                        />
+
+                        <Stack.Screen
+                            name="BlogDetailScreen"
+                            component={BlogDetailScreen}
+                            options={{ title: "Chi Tiết Bài Viết" }}
+                        />
+                    </>
+                )}
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}

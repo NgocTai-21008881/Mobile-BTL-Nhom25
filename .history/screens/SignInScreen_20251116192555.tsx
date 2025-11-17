@@ -1,0 +1,332 @@
+import React, { useState, useEffect } from "react";
+import {
+    View,
+    Text,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    SafeAreaView,
+    Image,
+} from "react-native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../App";
+import { supabase } from "../lib/supabase";
+
+type SignInScreenProps = {
+    navigation: StackNavigationProp<RootStackParamList, "SignIn">;
+};
+
+export default function SignInScreen({ navigation }: SignInScreenProps) {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [username, setUsername] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Subscribe to auth changes
+    useEffect(() => {
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+                console.log("🔔 Auth state changed in SignIn:", event);
+                if (session?.user) {
+                    console.log("✅ User logged in, navigating to Home");
+                    // Tự động chuyển sang Home khi login thành công
+                    navigation.replace("Home");
+                }
+            }
+        );
+
+        return () => {
+            authListener?.subscription.unsubscribe();
+        };
+    }, [navigation]);
+
+    const handleSignIn = async () => {
+        if (!email || !password) {
+            Alert.alert("❌ Lỗi", "Vui lòng nhập email và mật khẩu");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            console.log("🔐 Đang đăng nhập:", email);
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password,
+            });
+
+            if (error) {
+                console.error("❌ Lỗi đăng nhập:", error.message);
+                Alert.alert("❌ Đăng nhập thất bại", error.message);
+                return;
+            }
+
+            console.log("✅ Đăng nhập thành công:", data.user?.email);
+            // onAuthStateChange sẽ tự động điều hướng sang Home
+        } catch (e: any) {
+            console.error("💥 Lỗi:", e);
+            Alert.alert("❌ Lỗi", e.message ?? "Đã xảy ra lỗi");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSignUp = async () => {
+        if (!email || !password || !username) {
+            Alert.alert("❌ Lỗi", "Vui lòng nhập đầy đủ thông tin");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            console.log("📝 Đang tạo tài khoản:", email);
+
+            const { data, error } = await supabase.auth.signUp({
+                email: email.trim(),
+                password,
+            });
+
+            if (error) {
+                console.error("❌ Lỗi tạo tài khoản:", error.message);
+                Alert.alert("❌ Tạo tài khoản thất bại", error.message);
+                return;
+            }
+
+            // Lưu thêm info vào custom users table
+            if (data?.user?.id) {
+                await supabase.from("users").insert([
+                    {
+                        id: data.user.id,
+                        username,
+                        email,
+                    },
+                ]);
+            }
+
+            Alert.alert(
+                "✅ Thành công",
+                "Tài khoản đã được tạo! Vui lòng đăng nhập."
+            );
+            setIsSignUp(false);
+            setUsername("");
+            setEmail("");
+            setPassword("");
+        } catch (e: any) {
+            console.error("💥 Lỗi:", e);
+            Alert.alert("❌ Lỗi", e.message ?? "Đã xảy ra lỗi");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <ScrollView
+                style={styles.scrollView}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+            >
+                <View style={styles.content}>
+                    {/* Header */}
+                    <Text style={styles.welcomeText}>
+                        {isSignUp ? "Tạo Tài Khoản" : "Welcome back"} 👋
+                    </Text>
+
+                    {/* Sign Up Fields */}
+                    {isSignUp && (
+                        <>
+                            <Text style={styles.label}>Tên người dùng</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Nhập tên người dùng"
+                                placeholderTextColor="#C7D2E0"
+                                value={username}
+                                onChangeText={setUsername}
+                                editable={!loading}
+                                autoCapitalize="none"
+                            />
+                        </>
+                    )}
+
+                    {/* Email Field */}
+                    <Text style={styles.label}>Email</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter email"
+                        placeholderTextColor="#C7D2E0"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        editable={!loading}
+                        autoCapitalize="none"
+                    />
+
+                    {/* Password Field */}
+                    <Text style={styles.label}>Password</Text>
+                    <View style={styles.passwordContainer}>
+                        <TextInput
+                            style={styles.passwordInput}
+                            placeholder="Enter password"
+                            placeholderTextColor="#C7D2E0"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry={!showPassword}
+                            editable={!loading}
+                        />
+                        <TouchableOpacity
+                            onPress={() => setShowPassword(!showPassword)}
+                            style={styles.eyeIcon}
+                        >
+                            <Text style={styles.eyeText}>
+                                {showPassword ? "👁️" : "👁️"}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Forgot Password Link */}
+                    {!isSignUp && (
+                        <TouchableOpacity style={styles.forgotContainer}>
+                            <Text style={styles.forgotText}>Forgot password?</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    {/* Sign In / Sign Up Button */}
+                    <TouchableOpacity
+                        style={[
+                            styles.mainButton,
+                            loading && styles.buttonDisabled,
+                        ]}
+                        onPress={isSignUp ? handleSignUp : handleSignIn}
+                        disabled={loading}
+                        activeOpacity={0.8}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                            <Text style={styles.mainButtonText}>
+                                {isSignUp ? "Sign Up" : "Sign In"}
+                            </Text>
+                        )}
+                    </TouchableOpacity>
+
+                    {/* Or Login With Section */}
+                    {!isSignUp && (
+                        <>
+                            <View style={styles.dividerContainer}>
+                                <View style={styles.divider} />
+                                <Text style={styles.dividerText}>
+                                    OR LOG IN WITH
+                                </Text>
+                                <View style={styles.divider} />
+                            </View>
+
+                            {/* Social Buttons */}
+                            <View style={styles.socialContainer}>
+                                <TouchableOpacity
+                                    style={styles.socialButton}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.socialIcon}>G</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.socialButton}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.socialIcon}>f</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.socialButton}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.socialIcon}>🍎</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </>
+                    )}
+
+                    {/* Toggle Sign In / Sign Up */}
+                    <View style={styles.toggleContainer}>
+                        <Text style={styles.toggleText}>
+                            {isSignUp
+                                ? "Already have an account? "
+                                : "Don't have an account? "}
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setIsSignUp(!isSignUp);
+                                setEmail("");
+                                setPassword("");
+                                setUsername("");
+                            }}
+                            disabled={loading}
+                        >
+                            <Text style={styles.toggleLink}>
+                                {isSignUp ? "Sign in" : "Sign up"}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: "#F6F7FB" },
+    content: { padding: 20, paddingTop: 60 },
+    title: {
+        fontSize: 28,
+        fontWeight: "800",
+        color: "#0F172A",
+        marginBottom: 8,
+    },
+    subtitle: { fontSize: 14, color: "#64748B", marginBottom: 30 },
+    label: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#374151",
+        marginBottom: 8,
+    },
+    input: {
+        backgroundColor: "#fff",
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+    },
+    button: {
+        backgroundColor: "#10B981",
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: "center",
+        marginTop: 10,
+    },
+    buttonDisabled: { opacity: 0.6 },
+    buttonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+    toggleText: {
+        color: "#10B981",
+        textAlign: "center",
+        marginTop: 20,
+        fontWeight: "600",
+    },
+    debugBox: {
+        backgroundColor: "#FEF3C7",
+        borderRadius: 12,
+        padding: 12,
+        marginTop: 30,
+        marginBottom: 30,
+    },
+    debugTitle: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#92400E",
+        marginBottom: 8,
+    },
+    debugText: { fontSize: 12, color: "#78350F", marginBottom: 4 },
+});
