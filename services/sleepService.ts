@@ -17,7 +17,7 @@ export async function getSleepSchedule(userId: string) {
             .single();
 
         if (error) {
-            console.error("❌ Lỗi lấy lịch ngủ:", error.message);
+            // console.error("❌ Lỗi lấy lịch ngủ:", error.message);
             return { bedtime: "22:00", wakeup_time: "07:00" };
         }
 
@@ -26,7 +26,7 @@ export async function getSleepSchedule(userId: string) {
             wakeup_time: data?.sleep_wakeup_time || "07:00",
         };
     } catch (e: any) {
-        console.error("❌ Lỗi:", e.message);
+        // console.error("❌ Lỗi:", e.message);
         return { bedtime: "22:00", wakeup_time: "07:00" };
     }
 }
@@ -52,7 +52,7 @@ export async function updateSleepSchedule(
             .single();
 
         if (error) {
-            console.error("❌ Lỗi cập nhật lịch ngủ:", error.message);
+            // console.error("❌ Lỗi cập nhật lịch ngủ:", error.message);
             return { error: error.message, success: false };
         }
 

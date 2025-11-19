@@ -41,7 +41,7 @@ export async function fetchDailyActivity(
         if (error) throw error;
         return data || [];
     } catch (e) {
-        console.error("Lỗi fetchDailyActivity:", e);
+        // console.error("Lỗi fetchDailyActivity:", e);
         return [];
     }
 }
@@ -52,7 +52,7 @@ export async function fetchDailyActivity(
 export async function getTodayActivity(userId: string) {
     try {
         const today = new Date().toISOString().split("T")[0];
-        console.log("📅 getTodayActivity - userId:", userId, "date:", today);
+        // console.log("📅 getTodayActivity - userId:", userId, "date:", today);
 
         const { data, error } = await supabase
             .from("daily_activity")
@@ -62,7 +62,7 @@ export async function getTodayActivity(userId: string) {
             .single();
 
         if (error && error.code !== "PGRST116") {
-            console.error("❌ Supabase error:", error);
+            // console.error("❌ Supabase error:", error);
             return { steps: 0, calories: 0, heart_rate: 0, sleep_hours: 0 };
         }
 
@@ -70,7 +70,7 @@ export async function getTodayActivity(userId: string) {
             console.log("✅ Found today data:", data);
             return data;
         } else {
-            console.warn("⚠️ No data found for today, returning zeros");
+            // console.warn("⚠️ No data found for today, returning zeros");
             return { steps: 0, calories: 0, heart_rate: 0, sleep_hours: 0 };
         }
     } catch (e) {
@@ -107,7 +107,7 @@ export async function getWeeklyStats(userId: string) {
             avgHeartRate,
         };
     } catch (e) {
-        console.error("Lỗi getWeeklyStats:", e);
+        // console.error("Lỗi getWeeklyStats:", e);
         return {
             steps: 0,
             workout: 0,

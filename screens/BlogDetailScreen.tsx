@@ -13,6 +13,8 @@ import {
     TextInput,
     FlatList,
     Dimensions,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRoute, useNavigation } from "@react-navigation/native";
@@ -634,7 +636,10 @@ export default function BlogDetailScreen() {
                 animationType="slide"
                 onRequestClose={() => setShowCommentModal(false)}
             >
-                <View style={styles.modalOverlay}>
+                <KeyboardAvoidingView 
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  style={styles.modalOverlay}
+                >
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>
@@ -676,7 +681,7 @@ export default function BlogDetailScreen() {
                             </TouchableOpacity>
                         </View>
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </Modal>
 
             {/* Rating Modal */}
@@ -686,7 +691,10 @@ export default function BlogDetailScreen() {
                 animationType="slide"
                 onRequestClose={() => setShowRatingModal(false)}
             >
-                <View style={styles.modalOverlay}>
+                <KeyboardAvoidingView 
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  style={styles.modalOverlay}
+                >
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>
@@ -735,7 +743,7 @@ export default function BlogDetailScreen() {
                             </TouchableOpacity>
                         </View>
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </Modal>
         </>
     );

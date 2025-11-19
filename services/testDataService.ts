@@ -67,18 +67,38 @@ export async function insertTestData(userId: string) {
         cycleStartDate.setDate(today.getDate() - 10); // Bắt đầu 10 ngày trước
         const cycleStartStr = cycleStartDate.toISOString().split("T")[0];
 
-        const { error: cycleError } = await supabase
+        // Check xem user đã có cycle tracking chưa
+        const { data: existing } = await supabase
             .from("cycle_tracking")
-            .upsert(
-                [
+            .select("id")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+        let cycleError;
+        if (existing) {
+            // Update nếu đã tồn tại
+            const result = await supabase
+                .from("cycle_tracking")
+                .update({
+                    start_date: cycleStartStr,
+                    average_length: 28,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("user_id", userId);
+            cycleError = result.error;
+        } else {
+            // Insert nếu chưa tồn tại
+            const result = await supabase
+                .from("cycle_tracking")
+                .insert([
                     {
                         user_id: userId,
                         start_date: cycleStartStr,
                         average_length: 28,
                     },
-                ],
-                { onConflict: "user_id" }
-            );
+                ]);
+            cycleError = result.error;
+        }
 
         if (cycleError) {
             console.error("❌ Lỗi thêm cycle_tracking:", cycleError.message);

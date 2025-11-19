@@ -9,6 +9,8 @@ import {
     TextInput,
     ActivityIndicator,
     Alert,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { supabase } from "../lib/supabase";
@@ -291,7 +293,10 @@ export default function BMIScreen() {
                 animationType="slide"
                 onRequestClose={() => setModalVisible(false)}
             >
-                <View style={styles.modalBg}>
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  style={styles.modalBg}
+                >
                     <TouchableOpacity
                         style={styles.modalBackdrop}
                         activeOpacity={1}
@@ -353,7 +358,7 @@ export default function BMIScreen() {
                             )}
                         </TouchableOpacity>
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </Modal>
 
             {/* Modal Tư vấn Dinh dưỡng */}
@@ -363,7 +368,10 @@ export default function BMIScreen() {
                 animationType="slide"
                 onRequestClose={() => setNutritionModalVisible(false)}
             >
-                <View style={styles.modalBg}>
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  style={styles.modalBg}
+                >
                     <TouchableOpacity
                         style={styles.modalBackdrop}
                         activeOpacity={1}
@@ -613,7 +621,7 @@ export default function BMIScreen() {
                             </View>
                         </ScrollView>
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </Modal>
         </View>
     );

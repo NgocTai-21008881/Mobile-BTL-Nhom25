@@ -28,6 +28,9 @@ export type RootStackParamList = {
     SignIn: undefined;
     SignUp: undefined;
     Home: undefined;
+    OverviewScreen: undefined;
+    ExploreScreen: undefined;
+    SharingScreen: undefined;
     DoubleSupportScreen: undefined;
     CycleTrackingScreen: undefined;
     SleepScreen: undefined;
@@ -38,8 +41,7 @@ export type RootStackParamList = {
     AllHealthyStep: undefined;
     AllBlogsScreen: undefined;
     BlogDetailScreen: { id: string };
-    ExploreScreen: undefined;
-    OverviewScreen: undefined;
+    StepScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

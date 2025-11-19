@@ -144,7 +144,7 @@ export default function SleepScreen() {
             setBedtime(schedule.bedtime);
             setWakeUpTime(schedule.wakeup_time);
         } catch (e) {
-            console.error(e);
+            // console.error(e);
             Alert.alert("Lỗi", "Không tải được dữ liệu");
         } finally {
             setLoading(false);
@@ -201,16 +201,16 @@ export default function SleepScreen() {
             const newBed = editingTime === "bedtime" ? timeStr : bedtime;
             const newWake = editingTime === "wakeup" ? timeStr : wakeUpTime;
 
-            console.log("Saving time:", {
-                newBed,
-                newWake,
-                editingTime,
-                userId,
-            });
+            // console.log("Saving time:", {
+            //     newBed,
+            //     newWake,
+            //     editingTime,
+            //     userId,
+            // });
 
             const result = await updateSleepSchedule(userId, newBed, newWake);
 
-            console.log("Save result:", result);
+            // console.log("Save result:", result);
 
             // Luôn cập nhật state ngay lập tức
             if (editingTime === "bedtime") setBedtime(newBed);
@@ -218,7 +218,7 @@ export default function SleepScreen() {
 
             // Đóng modal sau khi cập nhật
             setTimeout(() => {
-                console.log("Closing modal...");
+                // console.log("Closing modal...");
                 setModalVisible(false);
                 setEditingTime(null);
                 setIsSaving(false);
@@ -227,7 +227,7 @@ export default function SleepScreen() {
             // Nếu save thất bại, thông báo
             if (!result.success) {
                 setTimeout(() => {
-                    console.log("Save failed:", result.error);
+                    // console.log("Save failed:", result.error);
                     Alert.alert(
                         "Cảnh báo",
                         "Không lưu được trên server: " +
@@ -236,7 +236,7 @@ export default function SleepScreen() {
                 }, 200);
             }
         } catch (e: any) {
-            console.error("Error saving time:", e);
+            // console.error("Error saving time:", e);
             // Vẫn cập nhật UI ngay cả khi lỗi
             if (editingTime === "bedtime") setBedtime(timeStr);
             else setWakeUpTime(timeStr);

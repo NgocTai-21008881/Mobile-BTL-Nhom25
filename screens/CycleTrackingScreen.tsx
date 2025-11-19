@@ -50,7 +50,7 @@ export default function CycleTrackingScreen() {
                     .maybeSingle();
 
                 if (error) {
-                    console.error("Lỗi:", error);
+                    // console.error("Lỗi:", error);
                 } else if (data) {
                     setCycleData(data);
                     setCycleLength(data.average_length?.toString() || "28");
@@ -59,7 +59,7 @@ export default function CycleTrackingScreen() {
                 }
             }
         } catch (error) {
-            console.error("Lỗi load data:", error);
+            // console.error("Lỗi load data:", error);
         } finally {
             setLoading(false);
         }
@@ -108,7 +108,7 @@ export default function CycleTrackingScreen() {
 
             if (error) {
                 Alert.alert("Lỗi", "Không thể lưu dữ liệu");
-                console.error(error);
+                // console.error(error);
             } else {
                 setCycleData(data);
                 calculateDaysBeforePeriod(data);
@@ -116,7 +116,7 @@ export default function CycleTrackingScreen() {
                 Alert.alert("Thành công", "Dữ liệu chu kỳ đã được cập nhật");
             }
         } catch (error) {
-            console.error("Lỗi:", error);
+            // console.error("Lỗi:", error);
         }
     };
 

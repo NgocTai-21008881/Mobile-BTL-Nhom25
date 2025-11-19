@@ -1,38 +1,52 @@
 import React, { useState } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { View, StyleSheet } from "react-native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import BottomNav, { TabKey } from "../componets/BottomNav";
 import OverviewScreen from "./OverviewScreen";
 import ExploreScreen from "./ExploreScreen";
 import SharingScreen from "./SharingScreen";
-import { RootStackParamList } from "../App";
+import StepScreen from "./StepScreen";
+import SleepScreen from "./SleepScreen";
+import BMIScreen from "./BMIScreen";
+import CaloriesScreen from "./CaloriesScreen";
+import HeartScreen from "./HeartScreen";
+import CycleTrackingScreen from "./CycleTrackingScreen";
+import BlogDetailScreen from "./BlogDetailScreen";
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+const Stack = createNativeStackNavigator();
 
 export default function HomeScreen() {
-    const navigation = useNavigation<NavigationProp>();
     const [activeTab, setActiveTab] = useState<TabKey>("Overview");
-
-    const renderTabContent = () => {
-        switch (activeTab) {
-            case "Explore":
-                return <ExploreScreen />;
-            case "Sharing":
-                return <SharingScreen />;
-            default:
-                return <OverviewScreen />;
-        }
-    };
 
     return (
         <View style={{ flex: 1, backgroundColor: "#fff" }}>
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ flexGrow: 1 }}
+            <Stack.Navigator
+                screenOptions={{
+                    headerShown: false,
+                }}
             >
-                {renderTabContent()}
-            </ScrollView>
+                {activeTab === "Overview" && (
+                    <>
+                        <Stack.Screen name="OverviewTab" component={OverviewScreen} />
+                        <Stack.Screen name="StepScreen" component={StepScreen} />
+                        <Stack.Screen name="SleepScreen" component={SleepScreen} />
+                        <Stack.Screen name="BMIScreen" component={BMIScreen} />
+                        <Stack.Screen name="CaloriesScreen" component={CaloriesScreen} />
+                        <Stack.Screen name="HeartScreen" component={HeartScreen} />
+                        <Stack.Screen name="CycleTrackingScreen" component={CycleTrackingScreen} />
+                        <Stack.Screen name="BlogDetailScreen" component={BlogDetailScreen} />
+                    </>
+                )}
+
+                {activeTab === "Explore" && (
+                    <Stack.Screen name="ExploreTab" component={ExploreScreen} />
+                )}
+
+                {activeTab === "Sharing" && (
+                    <Stack.Screen name="SharingTab" component={SharingScreen} />
+                )}
+            </Stack.Navigator>
+
             <BottomNav active={activeTab} onPress={setActiveTab} />
         </View>
     );

@@ -60,6 +60,7 @@ export default function HomeScreen() {
             setLoading(true);
             const {
                 data: { user },
+                error,
             } = await supabase.auth.getUser();
 
             console.log(
@@ -68,37 +69,39 @@ export default function HomeScreen() {
                 user?.email
             );
 
-            if (user) {
-                setUserId(user.id);
-
-                // Insert test data once if needed (for development)
-                console.log("📝 Inserting test data...");
-                await insertTestData(user.id);
-
-                // Load today's activity
-                const today = await getTodayActivity(user.id);
-                console.log("📱 OverviewScreen - today data:", today);
-                if (today) {
-                    setTodayData(today);
-                }
-
-                // Load weekly stats
-                const weekly = await getWeeklyStats(user.id);
-                console.log("📊 OverviewScreen - weekly data:", weekly);
-                if (weekly) {
-                    setWeeklyData(weekly);
-                }
-
-                // Load cycle tracking
-                const daysBefore = await getDaysBeforePeriod(user.id);
-                console.log(
-                    "🔄 OverviewScreen - daysBeforePeriod:",
-                    daysBefore
-                );
-                setDaysBeforePeriod(daysBefore >= 0 ? daysBefore : 15);
-            } else {
-                console.warn("⚠️ No user logged in");
+            if (error || !user) {
+                console.log("⚠️ User not logged in:", error?.message);
+                setLoading(false);
+                return;
             }
+
+            setUserId(user.id);
+
+            // Insert test data once if needed (for development)
+            console.log("📝 Inserting test data...");
+            await insertTestData(user.id);
+
+            // Load today's activity
+            const today = await getTodayActivity(user.id);
+            console.log("📱 OverviewScreen - today data:", today);
+            if (today) {
+                setTodayData(today);
+            }
+
+            // Load weekly stats
+            const weekly = await getWeeklyStats(user.id);
+            console.log("📊 OverviewScreen - weekly data:", weekly);
+            if (weekly) {
+                setWeeklyData(weekly);
+            }
+
+            // Load cycle tracking
+            const daysBefore = await getDaysBeforePeriod(user.id);
+            console.log(
+                "🔄 OverviewScreen - daysBeforePeriod:",
+                daysBefore
+            );
+            setDaysBeforePeriod(daysBefore >= 0 ? daysBefore : 15);
         } catch (error) {
             console.error("❌ Error loading user data:", error);
         } finally {

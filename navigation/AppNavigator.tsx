@@ -30,7 +30,6 @@ export default function AppNavigator({ state, setState }: AppNavigatorProps) {
                     },
                 }}
             >
-                {/* Launch Screen */}
                 {state === "launch" && (
                     <Stack.Screen
                         name="Launch"
@@ -42,7 +41,6 @@ export default function AppNavigator({ state, setState }: AppNavigatorProps) {
                     </Stack.Screen>
                 )}
 
-                {/* Loading Screen */}
                 {state === "loading" && (
                     <Stack.Screen
                         name="Loading"
@@ -53,7 +51,6 @@ export default function AppNavigator({ state, setState }: AppNavigatorProps) {
                     />
                 )}
 
-                {/* Sign In Screen */}
                 {state === "signin" && (
                     <>
                         <Stack.Screen
@@ -75,7 +72,6 @@ export default function AppNavigator({ state, setState }: AppNavigatorProps) {
                     </>
                 )}
 
-                {/* Home Screen */}
                 {state === "home" && (
                     <Stack.Screen
                         name="Home"
